@@ -1,6 +1,6 @@
 # CineScope
 
-CineScope is a movie discovery platform that allows users to explore movies, search for specific titles, and filter results by genre and year.
+CineScope is a movie discovery platform that allows users to explore movies, search for specific titles, and filter results by genre and year. (https://cinescope-kappa.vercel.app/)
 
 ## Features
 
