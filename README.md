@@ -23,7 +23,6 @@ CineScope is a movie discovery platform that allows users to explore movies, sea
 - Add user authentication
 - Create a favorites list
 - Add a movie recommendation system
-- Implement responsive design for different screen sizes
 
 
 ## BIGGG PLANS 
