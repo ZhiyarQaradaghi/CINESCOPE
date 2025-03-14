@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -11,12 +11,20 @@ import {
   CardMedia,
   CardContent,
   useTheme,
+  Button,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import { useAuth } from "../../contexts/AuthContext";
+import { addToFavorites, removeFromFavorites } from "../../services/movieApi";
 
-const MovieDetail = ({ movie, onClose }) => {
+const MovieDetail = ({ movie, onClose, onWatchClick }) => {
   const theme = useTheme();
+  const { user, favorites, loadFavorites } = useAuth();
+  const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
 
   if (!movie) return null;
 
@@ -28,10 +36,28 @@ const MovieDetail = ({ movie, onClose }) => {
     ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
     : null;
 
-  // Find trailer if available
   const trailer = movie.videos?.results.find(
     (video) => video.type === "Trailer" && video.site === "YouTube"
   );
+
+  const isFavorite = favorites?.some((fav) => fav.id === movie.id);
+
+  const handleFavoriteToggle = async () => {
+    if (!user) return; // if the user is not logged in
+    setIsUpdatingFavorite(true);
+    try {
+      if (isFavorite) {
+        await removeFromFavorites(movie.id);
+      } else {
+        await addToFavorites(movie.id);
+      }
+      await loadFavorites();
+    } catch (error) {
+      console.error("Error updating favorites:", error);
+    } finally {
+      setIsUpdatingFavorite(false);
+    }
+  };
 
   return (
     <Box sx={{ position: "relative" }}>
@@ -80,6 +106,51 @@ const MovieDetail = ({ movie, onClose }) => {
       )}
 
       <Box sx={{ position: "relative", p: 3, pt: backdropPath ? "220px" : 3 }}>
+        <Box
+          sx={{ display: "flex", justifyContent: "flex-end", mb: 3, gap: 2 }}
+        >
+          {user && (
+            <Tooltip
+              title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <IconButton
+                onClick={handleFavoriteToggle}
+                disabled={isUpdatingFavorite}
+                color={isFavorite ? "error" : "default"}
+                sx={{
+                  bgcolor: "rgba(0, 0, 0, 0.6)",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.8)",
+                    color: isFavorite ? "error.main" : "primary.main",
+                  },
+                  border: isFavorite
+                    ? `1px solid ${theme.palette.error.main}`
+                    : "none",
+                  width: 45,
+                  height: 45,
+                }}
+              >
+                {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              </IconButton>
+            </Tooltip>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<PlayArrowIcon />}
+            onClick={() => onWatchClick(movie.id)}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              background: "linear-gradient(90deg, #646cff, #ff64c8)",
+              fontWeight: 500,
+              px: 3,
+              py: 1,
+            }}
+          >
+            Watch Movie
+          </Button>
+        </Box>
+
         <Grid container spacing={3}>
           <Grid item xs={12} sm={4} md={3}>
             <Card elevation={6}>

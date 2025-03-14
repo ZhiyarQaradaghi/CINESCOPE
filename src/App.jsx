@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import {
   ThemeProvider,
   createTheme,
@@ -8,8 +9,12 @@ import {
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import HomePage from "./pages/HomePage";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import Profile from "./components/auth/Profile";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 
-// Create a theme instance
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -48,11 +53,27 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Header currentPage={currentPage} onPageChange={handlePageChange} />
-      <Container maxWidth={false} disableGutters>
-        <HomePage pageType={currentPage} />
-      </Container>
-      <Footer />
+      <AuthProvider>
+        <Router>
+          <Header currentPage={currentPage} onPageChange={handlePageChange} />
+          <Container maxWidth={false} disableGutters>
+            <Routes>
+              <Route path="/" element={<HomePage pageType={currentPage} />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Container>
+          <Footer />
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

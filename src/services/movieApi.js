@@ -1,109 +1,142 @@
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const BASE_URL = "https://api.themoviedb.org/3";
+const API_BASE_URL = "http://localhost:5000/api";
 
-export const fetchPopularMovies = async (page = 1) => {
+const makeRequest = async (endpoint, options = {}) => {
   try {
-    const response = await fetch(
-      `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching popular movies:", error);
-    throw error;
-  }
-};
-
-export const fetchTopRatedMovies = async (page = 1) => {
-  try {
-    const response = await fetch(
-      `${BASE_URL}/movie/top_rated?api_key=${API_KEY}&page=${page}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching top rated movies:", error);
-    throw error;
-  }
-};
-
-export const fetchUpcomingMovies = async (page = 1) => {
-  try {
-    const response = await fetch(
-      `${BASE_URL}/movie/upcoming?api_key=${API_KEY}&page=${page}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching upcoming movies:", error);
-    throw error;
-  }
-};
-
-export const searchMovies = async (query, page = 1) => {
-  try {
-    const encodedQuery = encodeURIComponent(query);
-
-    const response = await fetch(
-      `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodedQuery}&page=${page}&include_adult=false`
-    );
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, options);
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log("Search results:", data);
-    return data;
+    return data.data;
   } catch (error) {
-    console.error("Error searching movies:", error);
+    console.error(`API Request Error for ${endpoint}:`, error);
     throw error;
   }
+};
+
+const getToken = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  return user?.token;
+};
+
+const getAuthHeaders = () => {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+export const fetchPopularMovies = async (page = 1, params = {}) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    ...(params.with_genres
+      ? { with_genres: params.with_genres.toString() }
+      : {}),
+    ...(params.primary_release_year
+      ? { primary_release_year: params.primary_release_year.toString() }
+      : {}),
+  }).toString();
+
+  console.log(`Fetching popular movies with params: ${queryParams}`);
+  const response = await makeRequest(`/movies/popular?${queryParams}`);
+  return response;
+};
+
+export const fetchTopRatedMovies = async (page = 1, params = {}) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    ...(params.with_genres
+      ? { with_genres: params.with_genres.toString() }
+      : {}),
+    ...(params.primary_release_year
+      ? { primary_release_year: params.primary_release_year.toString() }
+      : {}),
+  }).toString();
+
+  console.log(`Fetching top rated movies with params: ${queryParams}`);
+  const response = await makeRequest(`/movies/top_rated?${queryParams}`);
+  return response;
+};
+
+export const fetchUpcomingMovies = async (page = 1, params = {}) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    ...(params.with_genres
+      ? { with_genres: params.with_genres.toString() }
+      : {}),
+    ...(params.primary_release_year
+      ? { primary_release_year: params.primary_release_year.toString() }
+      : {}),
+  }).toString();
+
+  console.log(`Fetching upcoming movies with params: ${queryParams}`);
+  const response = await makeRequest(`/movies/upcoming?${queryParams}`);
+  return response;
+};
+
+export const searchMovies = async (query, page = 1, params = {}) => {
+  const queryParams = new URLSearchParams({
+    query,
+    page: page.toString(),
+    ...(params.with_genres
+      ? { with_genres: params.with_genres.toString() }
+      : {}),
+  }).toString();
+
+  console.log(`Searching movies with params: ${queryParams}`);
+  return makeRequest(`/movies/search?${queryParams}`);
 };
 
 export const fetchMovieDetails = async (movieId) => {
-  try {
-    const response = await fetch(
-      `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&append_to_response=videos,credits`
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching movie details:", error);
-    throw error;
-  }
+  return makeRequest(`/movies/${movieId}`);
 };
 
 export const fetchGenres = async () => {
-  try {
-    const response = await fetch(
-      `${BASE_URL}/genre/movie/list?api_key=${API_KEY}`
-    );
+  return makeRequest("/movies/genres");
+};
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+export const registerUser = async (userData) => {
+  return makeRequest("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+};
 
-    const data = await response.json();
-    return data.genres;
-  } catch (error) {
-    console.error("Error fetching genres:", error);
-    throw error;
-  }
+export const loginUser = async (credentials) => {
+  return makeRequest("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(credentials),
+  });
+};
+
+export const getUserProfile = async () => {
+  return makeRequest("/auth/profile", {
+    headers: getAuthHeaders(),
+  });
+};
+
+export const getFavorites = async () => {
+  return makeRequest("/favorites", {
+    headers: getAuthHeaders(),
+  });
+};
+
+export const addToFavorites = async (movieId) => {
+  return makeRequest(`/favorites/${movieId}`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+  });
+};
+
+export const removeFromFavorites = async (movieId) => {
+  return makeRequest(`/favorites/${movieId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
 };
