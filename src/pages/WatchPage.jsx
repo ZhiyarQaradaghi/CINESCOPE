@@ -9,15 +9,31 @@ import {
   Divider,
   Grid,
   Rating,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
+  Stack,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ClosedCaptionIcon from "@mui/icons-material/ClosedCaption";
+import SpeedIcon from "@mui/icons-material/Speed";
+import QualityIcon from "@mui/icons-material/HighQuality";
 import VideoPlayer from "../components/player/VideoPlayer";
 import { fetchMovieDetails } from "../services/movieApi";
 import Loader from "../components/common/Loader";
+import AdvancedSettings from "../components/player/AdvancedSettings";
+import CommentSection from "../components/comments/CommentSection";
 
 const WatchPage = ({ movieId, onBack }) => {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [quality, setQuality] = useState("1080p");
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [subtitle, setSubtitle] = useState("English");
+  const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
 
   useEffect(() => {
     const loadMovie = async () => {
@@ -36,6 +52,26 @@ const WatchPage = ({ movieId, onBack }) => {
       loadMovie();
     }
   }, [movieId]);
+
+  const handleQualityChange = (event) => {
+    setQuality(event.target.value);
+  };
+
+  const handleSpeedChange = (event) => {
+    setPlaybackSpeed(event.target.value);
+  };
+
+  const handleSubtitleChange = (event) => {
+    setSubtitle(event.target.value);
+  };
+
+  const handleAdvancedSettings = () => {
+    setAdvancedSettingsOpen(true);
+  };
+
+  const handleCloseAdvancedSettings = () => {
+    setAdvancedSettingsOpen(false);
+  };
 
   if (loading) {
     return (
@@ -99,74 +135,32 @@ const WatchPage = ({ movieId, onBack }) => {
           </Typography>
         </Box>
 
-        <Paper
-          elevation={4}
-          sx={{
-            borderRadius: 3,
-            overflow: "hidden",
-            mb: 4,
-            bgcolor: "rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <VideoPlayer movieId={movieId} />
-        </Paper>
-
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
+            <Paper
+              elevation={4}
+              sx={{
+                borderRadius: 3,
+                overflow: "hidden",
+                mb: 4,
+                bgcolor: "rgba(0, 0, 0, 0.5)",
+                backdropFilter: "blur(10px)",
+                position: "relative",
+                aspectRatio: "16/9",
+              }}
+            >
+              <VideoPlayer movieId={movieId} />
+            </Paper>
+
             <Paper
               sx={{
                 p: 3,
                 borderRadius: 2,
                 bgcolor: "rgba(30, 30, 46, 0.7)",
                 backdropFilter: "blur(10px)",
+                mb: 3,
               }}
             >
-              <Box sx={{ mb: 2 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: 2,
-                    mb: 2,
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Rating
-                      value={movie.vote_average / 2}
-                      precision={0.5}
-                      readOnly
-                    />
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      {movie.vote_average?.toFixed(1)}/10
-                    </Typography>
-                  </Box>
-
-                  {movie.runtime && (
-                    <Typography variant="body2" color="text.secondary">
-                      {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
-                    </Typography>
-                  )}
-
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {movie.genres?.map((genre) => (
-                      <Chip key={genre.id} label={genre.name} size="small" />
-                    ))}
-                  </Box>
-                </Box>
-
-                {movie.tagline && (
-                  <Typography
-                    variant="subtitle1"
-                    color="text.secondary"
-                    sx={{ fontStyle: "italic", mb: 2 }}
-                  >
-                    {movie.tagline}
-                  </Typography>
-                )}
-              </Box>
-
               <Typography variant="h6" gutterBottom>
                 Overview
               </Typography>
@@ -174,6 +168,8 @@ const WatchPage = ({ movieId, onBack }) => {
                 {movie.overview || "No overview available."}
               </Typography>
             </Paper>
+
+            <CommentSection movieId={movieId} />
           </Grid>
 
           <Grid item xs={12} md={4}>
@@ -181,7 +177,6 @@ const WatchPage = ({ movieId, onBack }) => {
               sx={{
                 p: 3,
                 borderRadius: 2,
-                height: "100%",
                 bgcolor: "rgba(30, 30, 46, 0.7)",
                 backdropFilter: "blur(10px)",
               }}
@@ -189,33 +184,87 @@ const WatchPage = ({ movieId, onBack }) => {
               <Typography variant="h6" gutterBottom>
                 Watch Options
               </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                This is a placeholder for watch options, streaming providers, or
-                other related functionality.
-              </Typography>
+              <Divider sx={{ mb: 3 }} />
 
-              <Typography variant="body2" paragraph>
-                In a complete implementation, this area could include:
-              </Typography>
+              <Stack spacing={3}>
+                <FormControl fullWidth>
+                  <InputLabel>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <QualityIcon sx={{ mr: 1 }} />
+                      Quality
+                    </Box>
+                  </InputLabel>
+                  <Select
+                    value={quality}
+                    onChange={handleQualityChange}
+                    label="Quality"
+                  >
+                    <MenuItem value="4K">4K Ultra HD</MenuItem>
+                    <MenuItem value="1080p">1080p Full HD</MenuItem>
+                    <MenuItem value="720p">720p HD</MenuItem>
+                    <MenuItem value="480p">480p SD</MenuItem>
+                  </Select>
+                </FormControl>
 
-              <Box component="ul" sx={{ pl: 2 }}>
-                <Typography component="li" variant="body2">
-                  Streaming quality options
-                </Typography>
-                <Typography component="li" variant="body2">
-                  Audio and subtitle settings
-                </Typography>
-                <Typography component="li" variant="body2">
-                  Playback controls
-                </Typography>
-                <Typography component="li" variant="body2">
-                  Recommended movies
-                </Typography>
-              </Box>
+                <FormControl fullWidth>
+                  <InputLabel>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <SpeedIcon sx={{ mr: 1 }} />
+                      Playback Speed
+                    </Box>
+                  </InputLabel>
+                  <Select
+                    value={playbackSpeed}
+                    onChange={handleSpeedChange}
+                    label="Playback Speed"
+                  >
+                    <MenuItem value={0.5}>0.5x</MenuItem>
+                    <MenuItem value={0.75}>0.75x</MenuItem>
+                    <MenuItem value={1.0}>Normal</MenuItem>
+                    <MenuItem value={1.25}>1.25x</MenuItem>
+                    <MenuItem value={1.5}>1.5x</MenuItem>
+                    <MenuItem value={2.0}>2x</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth>
+                  <InputLabel>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <ClosedCaptionIcon sx={{ mr: 1 }} />
+                      Subtitles
+                    </Box>
+                  </InputLabel>
+                  <Select
+                    value={subtitle}
+                    onChange={handleSubtitleChange}
+                    label="Subtitles"
+                  >
+                    <MenuItem value="off">Off</MenuItem>
+                    <MenuItem value="English">English</MenuItem>
+                    <MenuItem value="Spanish">Spanish</MenuItem>
+                    <MenuItem value="French">French</MenuItem>
+                    <MenuItem value="German">German</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <Button
+                  variant="contained"
+                  startIcon={<SettingsIcon />}
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  onClick={handleAdvancedSettings}
+                >
+                  Advanced Settings
+                </Button>
+              </Stack>
             </Paper>
           </Grid>
         </Grid>
+
+        <AdvancedSettings
+          open={advancedSettingsOpen}
+          onClose={handleCloseAdvancedSettings}
+        />
       </Container>
     </Box>
   );
