@@ -18,6 +18,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ShareIcon from "@mui/icons-material/Share";
 import { useAuth } from "../../contexts/AuthContext";
 import { addToFavorites, removeFromFavorites } from "../../services/movieApi";
 
@@ -56,6 +57,24 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
       console.error("Error updating favorites:", error);
     } finally {
       setIsUpdatingFavorite(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const movieUrl = `${window.location.origin}/movie/${movie.id}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: movie.title,
+          text: `Check out ${movie.title} on CineScope!`,
+          url: movieUrl,
+        });
+      } catch (error) {
+        console.log("Error sharing:", error);
+      }
+    } else {
+      navigator.clipboard.writeText(movieUrl);
     }
   };
 
@@ -134,6 +153,22 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
               </IconButton>
             </Tooltip>
           )}
+          <Tooltip title="Share movie">
+            <IconButton
+              onClick={handleShare}
+              sx={{
+                bgcolor: "rgba(0, 0, 0, 0.6)",
+                "&:hover": {
+                  bgcolor: "rgba(0, 0, 0, 0.8)",
+                  color: "primary.main",
+                },
+                width: 45,
+                height: 45,
+              }}
+            >
+              <ShareIcon />
+            </IconButton>
+          </Tooltip>
           <Button
             variant="contained"
             startIcon={<PlayArrowIcon />}
