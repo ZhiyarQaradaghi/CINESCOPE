@@ -10,6 +10,10 @@ import {
   Paper,
   alpha,
   Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import SearchBar from "../components/common/SearchBar";
 import Loader from "../components/common/Loader";
@@ -53,11 +57,11 @@ const HomePage = ({ pageType = "home" }) => {
   const [selectedYear, setSelectedYear] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [watchingMovieId, setWatchingMovieId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("popular");
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Reset page when pageType changes
   useEffect(() => {
     setCurrentPage(1);
     setSearchQuery("");
@@ -65,7 +69,6 @@ const HomePage = ({ pageType = "home" }) => {
     setSelectedYear("");
   }, [pageType]);
 
-  // Fetch genres on component mount
   useEffect(() => {
     const getGenres = async () => {
       try {
@@ -93,7 +96,7 @@ const HomePage = ({ pageType = "home" }) => {
             ...(selectedYear ? { primary_release_year: selectedYear } : {}),
           };
 
-          switch (pageType) {
+          switch (selectedCategory) {
             case "popular":
               data = await fetchPopularMovies(currentPage, params);
               break;
@@ -127,7 +130,7 @@ const HomePage = ({ pageType = "home" }) => {
     };
 
     getMovies();
-  }, [searchQuery, currentPage, selectedGenre, selectedYear, pageType]);
+  }, [searchQuery, currentPage, selectedGenre, selectedYear, selectedCategory]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -233,6 +236,8 @@ const HomePage = ({ pageType = "home" }) => {
                 onGenreChange={handleGenreChange}
                 yearRange={selectedYear}
                 onYearChange={setSelectedYear}
+                category={selectedCategory}
+                onCategoryChange={setSelectedCategory}
               />
             </Paper>
           </Box>

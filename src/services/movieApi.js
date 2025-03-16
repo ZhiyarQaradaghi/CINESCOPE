@@ -55,7 +55,7 @@ export const fetchTopRatedMovies = async (page = 1, params = {}) => {
   }).toString();
 
   console.log(`Fetching top rated movies with params: ${queryParams}`);
-  const response = await makeRequest(`/movies/top_rated?${queryParams}`);
+  const response = await makeRequest(`/movies/top-rated?${queryParams}`);
   return response;
 };
 
@@ -139,4 +139,24 @@ export const removeFromFavorites = async (movieId) => {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
+};
+
+// Fetch movies by genre
+export const fetchMoviesByGenre = async (genreId, page = 1) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    with_genres: genreId.toString(),
+  }).toString();
+
+  return makeRequest(`/movies/discover?${queryParams}`);
+};
+
+// Fetch trending movies
+export const fetchTrendingMovies = async (timeWindow = "week", page = 1) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    time_window: timeWindow,
+  }).toString();
+
+  return makeRequest(`/movies/trending?${queryParams}`);
 };

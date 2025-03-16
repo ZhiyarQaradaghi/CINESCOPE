@@ -14,6 +14,8 @@ const Filters = ({
   onGenreChange,
   yearRange,
   onYearChange,
+  category,
+  onCategoryChange,
 }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 70 }, (_, i) => currentYear - i);
@@ -31,6 +33,20 @@ const Filters = ({
           },
         }}
       >
+        <FormControl>
+          <InputLabel id="category-select-label">Category</InputLabel>
+          <Select
+            labelId="category-select-label"
+            value={category}
+            label="Category"
+            onChange={(e) => onCategoryChange(e.target.value)}
+          >
+            <MenuItem value="popular">Popular</MenuItem>
+            <MenuItem value="top_rated">Top Rated</MenuItem>
+            <MenuItem value="upcoming">Upcoming</MenuItem>
+          </Select>
+        </FormControl>
+
         <FormControl>
           <InputLabel id="genre-select-label">Genre</InputLabel>
           <Select

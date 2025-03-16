@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import {
   ThemeProvider,
@@ -14,6 +13,8 @@ import Register from "./components/auth/Register";
 import Profile from "./components/auth/Profile";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import ExplorePage from "./pages/ExplorePage";
+import WatchlistPage from "./pages/WatchlistPage";
 
 const theme = createTheme({
   palette: {
@@ -25,12 +26,12 @@ const theme = createTheme({
       main: "#ff64c8",
     },
     background: {
-      default: "#121212",
-      paper: "#1e1e1e",
+      default: "#0f0f1e",
+      paper: "#1a1a2e",
     },
   },
   typography: {
-    fontFamily: '"system-ui", "Avenir", "Helvetica", "Arial", sans-serif',
+    fontFamily: "'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif",
   },
   components: {
     MuiButton: {
@@ -44,21 +45,17 @@ const theme = createTheme({
 });
 
 function App() {
-  const [currentPage, setCurrentPage] = useState("home");
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <Header currentPage={currentPage} onPageChange={handlePageChange} />
+          <Header />
           <Container maxWidth={false} disableGutters>
             <Routes>
-              <Route path="/" element={<HomePage pageType={currentPage} />} />
+              <Route path="/" element={<HomePage />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/watchlist" element={<WatchlistPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route
