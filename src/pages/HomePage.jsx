@@ -46,7 +46,7 @@ const pageTypeToDescription = {
   upcoming: "Get a sneak peek at movies coming soon",
 };
 
-const HomePage = ({ pageType = "home" }) => {
+const HomePage = ({ pageType = "top_rated" }) => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,7 +58,7 @@ const HomePage = ({ pageType = "home" }) => {
   const [selectedYear, setSelectedYear] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [watchingMovieId, setWatchingMovieId] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("popular");
+  const [selectedCategory, setSelectedCategory] = useState("top_rated");
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));

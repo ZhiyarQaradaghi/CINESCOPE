@@ -19,6 +19,9 @@ import DialogContent from "@mui/material/DialogContent";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 
+const watchlistBackgroundImage =
+  "https://image.tmdb.org/t/p/original/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg"; // Pulp Fiction
+
 const WatchlistPage = () => {
   const [loading, setLoading] = useState(true);
   const [movieDetails, setMovieDetails] = useState(null);
@@ -62,11 +65,25 @@ const WatchlistPage = () => {
         minHeight: "calc(100vh - 120px)",
         display: "flex",
         flexDirection: "column",
-        background: "linear-gradient(to bottom, #0f0f1e 0%, #1a1a2e 100%)",
+        background: `linear-gradient(to bottom, rgba(15, 15, 30, 0.9), rgba(26, 26, 46, 0.95)), 
+                    url(${watchlistBackgroundImage}) no-repeat center center / cover fixed`,
         py: 4,
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "100%",
+          backgroundImage: "url(/noise.png)",
+          opacity: 0.03,
+          pointerEvents: "none",
+          zIndex: 1,
+        },
       }}
     >
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" sx={{ position: "relative", zIndex: 2 }}>
         <Box sx={{ textAlign: "center", mb: 5 }}>
           <Typography
             variant="h3"
