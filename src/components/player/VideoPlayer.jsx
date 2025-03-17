@@ -1,83 +1,32 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   IconButton,
-  Slider,
-  Typography,
   Stack,
   Fade,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
-import VolumeUpIcon from "@mui/icons-material/VolumeUp";
-import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 
 const VideoPlayer = ({ movieId }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const playerRef = useRef(null);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const playerContainerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
-
-  const handlePlayPause = () => {
-    if (isPlaying) {
-      playerRef.current?.pause();
-    } else {
-      playerRef.current?.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleTimeUpdate = (e) => {
-    setCurrentTime(e.target.currentTime);
-  };
-
-  const handleLoadedMetadata = (e) => {
-    setDuration(e.target.duration);
-  };
-
-  const handleVolumeChange = (_, newValue) => {
-    const volumeValue = newValue / 100;
-    setVolume(volumeValue);
-    setIsMuted(volumeValue === 0);
-    if (playerRef.current) {
-      playerRef.current.volume = volumeValue;
-    }
-  };
-
-  const handleMuteToggle = () => {
-    if (playerRef.current) {
-      playerRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
+  const iframeRef = useRef(null);
 
   const handleFullscreenToggle = () => {
     if (!document.fullscreenElement) {
-      playerRef.current?.parentElement?.requestFullscreen();
+      playerContainerRef.current?.requestFullscreen();
       setIsFullscreen(true);
     } else {
       document.exitFullscreen();
       setIsFullscreen(false);
     }
-  };
-
-  const handleSeek = (_, newValue) => {
-    if (playerRef.current) {
-      playerRef.current.currentTime = (newValue / 100) * duration;
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   const handleMouseMove = () => {
@@ -86,148 +35,144 @@ const VideoPlayer = ({ movieId }) => {
       clearTimeout(controlsTimeoutRef.current);
     }
     controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying) {
-        setShowControls(false);
-      }
+      setShowControls(false);
     }, 3000);
   };
 
+  useEffect(() => {
+    return () => {
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleIframeLoad = () => {
+    setLoading(false);
+  };
+
+  const handleIframeError = () => {
+    setError(true);
+    setLoading(false);
+  };
+
+  let sourceUrl;
+  if (movieId && movieId.startsWith("movie?tmdb=")) {
+    const tmdbId = movieId.replace("movie?tmdb=", "");
+    sourceUrl = `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
+  } else if (movieId) {
+    sourceUrl = `https://vidsrc.me/embed/movie?tmdb=${movieId}`;
+  } else {
+    sourceUrl = null;
+  }
+
   return (
     <Box
+      ref={playerContainerRef}
       sx={{
+        position: "relative",
         width: "100%",
         height: "100%",
-        position: "relative",
-        bgcolor: "#000",
-        borderRadius: 2,
-        overflow: "hidden",
+        bgcolor: "black",
       }}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
+      onMouseEnter={() => setShowControls(true)}
     >
-      <Box
-        component="video"
-        ref={playerRef}
-        sx={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-        }}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        poster={`https://image.tmdb.org/t/p/original/movie/${movieId}/backdrop.jpg`}
-      >
-        <source src="" type="video/mp4" />
-        Your browser does not support the video tag.
-      </Box>
+      {error ? (
+        <Box
+          sx={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            color: "white",
+          }}
+        >
+          <Typography variant="body1" gutterBottom>
+            Unable to load video
+          </Typography>
+          <Typography variant="body2">
+            Please try another server or check back later
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          {loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 1,
+                bgcolor: "rgba(0,0,0,0.7)",
+              }}
+            >
+              <CircularProgress color="primary" />
+            </Box>
+          )}
+          <Box
+            sx={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            {sourceUrl && (
+              <iframe
+                ref={iframeRef}
+                src={sourceUrl}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                allowFullScreen
+                title="Movie Player"
+                onLoad={handleIframeLoad}
+                onError={handleIframeError}
+                style={{ border: "none" }}
+                sandbox="allow-same-origin allow-scripts allow-forms"
+              />
+            )}
+          </Box>
+        </>
+      )}
 
       <Fade in={showControls}>
         <Box
           sx={{
             position: "absolute",
-            bottom: 0,
+            top: 0,
             left: 0,
             right: 0,
-            bgcolor: "rgba(0, 0, 0, 0.7)",
-            p: 2,
+            bottom: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.7) 100%)",
+            opacity: showControls ? 1 : 0,
             transition: "opacity 0.3s",
+            pointerEvents: "none",
+            zIndex: 2,
           }}
         >
-          <Stack spacing={1}>
-            <Slider
-              value={(currentTime / duration) * 100 || 0}
-              onChange={handleSeek}
-              sx={{
-                color: "#646cff",
-                height: 4,
-                "& .MuiSlider-thumb": {
-                  width: 8,
-                  height: 8,
-                  transition: "0.3s cubic-bezier(.47,1.64,.41,.8)",
-                  "&:hover, &.Mui-focusVisible": {
-                    boxShadow: "none",
-                  },
-                },
-              }}
-            />
-
-            <Stack
-              direction="row"
-              spacing={2}
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <IconButton
-                  onClick={handlePlayPause}
-                  sx={{ color: "white" }}
-                  size="small"
-                >
-                  {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-                </IconButton>
-
-                <Box sx={{ display: "flex", alignItems: "center", width: 200 }}>
-                  <IconButton
-                    onClick={handleMuteToggle}
-                    sx={{ color: "white" }}
-                    size="small"
-                  >
-                    {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-                  </IconButton>
-                  <Slider
-                    value={isMuted ? 0 : volume * 100}
-                    onChange={handleVolumeChange}
-                    sx={{
-                      width: 100,
-                      ml: 1,
-                      color: "#646cff",
-                    }}
-                    size="small"
-                  />
-                </Box>
-
-                <Typography variant="body2" color="white">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </Typography>
-              </Box>
-
-              <IconButton
-                onClick={handleFullscreenToggle}
-                sx={{ color: "white" }}
-                size="small"
-              >
-                {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-              </IconButton>
-            </Stack>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ p: 2, justifyContent: "flex-end", pointerEvents: "auto" }}
+          >
+            <IconButton onClick={handleFullscreenToggle} color="inherit">
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+            </IconButton>
           </Stack>
         </Box>
       </Fade>
-
-      {!isPlaying && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <IconButton
-            onClick={handlePlayPause}
-            sx={{
-              color: "white",
-              bgcolor: "rgba(100, 108, 255, 0.8)",
-              "&:hover": {
-                bgcolor: "rgba(100, 108, 255, 0.9)",
-              },
-              width: 64,
-              height: 64,
-            }}
-          >
-            <PlayArrowIcon sx={{ fontSize: 32 }} />
-          </IconButton>
-        </Box>
-      )}
     </Box>
   );
 };

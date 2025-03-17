@@ -23,6 +23,7 @@ import {
 } from "../services/movieApi";
 import SearchBar from "../components/common/SearchBar";
 import WatchPage from "./WatchPage";
+import { ServerProvider } from "../contexts/ServerContext";
 
 const ExplorePage = () => {
   const [loading, setLoading] = useState(true);
@@ -120,7 +121,11 @@ const ExplorePage = () => {
   };
 
   if (watchingMovieId) {
-    return <WatchPage movieId={watchingMovieId} onBack={handleBackFromWatch} />;
+    return (
+      <ServerProvider>
+        <WatchPage movieId={watchingMovieId} onBack={handleBackFromWatch} />
+      </ServerProvider>
+    );
   }
 
   return (

@@ -3,7 +3,15 @@ const API_BASE_URL = "http://localhost:5000/api";
 const makeRequest = async (endpoint, options = {}) => {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, options);
+    console.log("Fetching:", url);
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -141,7 +149,6 @@ export const removeFromFavorites = async (movieId) => {
   });
 };
 
-// Fetch movies by genre
 export const fetchMoviesByGenre = async (genreId, page = 1) => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
@@ -151,7 +158,6 @@ export const fetchMoviesByGenre = async (genreId, page = 1) => {
   return makeRequest(`/movies/discover?${queryParams}`);
 };
 
-// Fetch trending movies
 export const fetchTrendingMovies = async (timeWindow = "week", page = 1) => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
@@ -159,4 +165,12 @@ export const fetchTrendingMovies = async (timeWindow = "week", page = 1) => {
   }).toString();
 
   return makeRequest(`/movies/trending?${queryParams}`);
+};
+
+export const fetchStreamingSources = async (movieId) => {
+  return makeRequest(`/movies/${movieId}/streaming-sources`);
+};
+
+export const fetchAvailableServers = async (movieId) => {
+  return makeRequest(`/movies/${movieId}/servers`);
 };

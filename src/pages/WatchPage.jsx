@@ -5,41 +5,30 @@ import {
   Container,
   Paper,
   IconButton,
-  Chip,
-  Divider,
   Grid,
-  Rating,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Button,
+  Chip,
   Stack,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ClosedCaptionIcon from "@mui/icons-material/ClosedCaption";
-import SpeedIcon from "@mui/icons-material/Speed";
-import QualityIcon from "@mui/icons-material/HighQuality";
-import VideoPlayer from "../components/player/VideoPlayer";
 import { fetchMovieDetails } from "../services/movieApi";
 import Loader from "../components/common/Loader";
-import AdvancedSettings from "../components/player/AdvancedSettings";
 import CommentSection from "../components/comments/CommentSection";
+import VideoPlayer from "../components/player/VideoPlayer";
+import ServerList from "../components/player/ServerList";
+import { useServer } from "../contexts/ServerContext";
 
 const WatchPage = ({ movieId, onBack }) => {
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quality, setQuality] = useState("1080p");
-  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  const [subtitle, setSubtitle] = useState("English");
-  const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
+  const { currentSource, setCurrentSource } = useServer();
 
   useEffect(() => {
     const loadMovie = async () => {
       try {
         setLoading(true);
+        console.log("Fetching movie details for ID:", movieId);
         const details = await fetchMovieDetails(movieId);
+        console.log("Movie details received:", details);
         setMovie(details);
       } catch (error) {
         console.error("Error loading movie:", error);
@@ -52,26 +41,6 @@ const WatchPage = ({ movieId, onBack }) => {
       loadMovie();
     }
   }, [movieId]);
-
-  const handleQualityChange = (event) => {
-    setQuality(event.target.value);
-  };
-
-  const handleSpeedChange = (event) => {
-    setPlaybackSpeed(event.target.value);
-  };
-
-  const handleSubtitleChange = (event) => {
-    setSubtitle(event.target.value);
-  };
-
-  const handleAdvancedSettings = () => {
-    setAdvancedSettingsOpen(true);
-  };
-
-  const handleCloseAdvancedSettings = () => {
-    setAdvancedSettingsOpen(false);
-  };
 
   if (loading) {
     return (
@@ -94,63 +63,88 @@ const WatchPage = ({ movieId, onBack }) => {
     );
   }
 
+  const streamingSources = movie.imdb_id
+    ? { vidsrc: `https://vidsrc.me/embed/${movie.imdb_id}/` }
+    : { vidsrc: `https://vidsrc.me/embed/movie?tmdb=${movie.id}` };
+
   return (
     <Box
       sx={{
-        minHeight: "calc(100vh - 120px)",
-        background: "linear-gradient(to bottom, #0f0f1e 0%, #1a1a2e 100%)",
+        minHeight: "100vh",
+        background: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(20,20,40,0.8)), url(https://image.tmdb.org/t/p/original${movie?.backdrop_path}) no-repeat center center / cover`,
         py: 4,
       }}
     >
-      <Container maxWidth="lg">
-        <Box sx={{ mb: 3 }}>
+      <Container maxWidth="xl">
+        <Box sx={{ mb: 4 }}>
           <IconButton
             onClick={onBack}
             sx={{
               color: "white",
+              bgcolor: "rgba(0,0,0,0.5)",
+              "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
               mb: 2,
-              "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.1)",
-              },
             }}
           >
-            <ArrowBackIcon />
-            <Typography sx={{ ml: 1 }}>Back</Typography>
+            <ArrowBackIcon /> Back
           </IconButton>
 
-          <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              fontWeight: 700,
+              color: "white",
+              textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+            }}
+          >
             {movie.title}
-            <Typography
-              component="span"
-              variant="h5"
-              color="text.secondary"
-              sx={{ ml: 1 }}
-            >
-              (
-              {movie.release_date
-                ? new Date(movie.release_date).getFullYear()
-                : "N/A"}
-              )
-            </Typography>
           </Typography>
+
+          <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+            <Chip
+              label={`${movie.release_date?.split("-")[0] || "Unknown"}`}
+              size="small"
+              sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+            />
+            {movie.runtime && (
+              <Chip
+                label={`${Math.floor(movie.runtime / 60)}h ${
+                  movie.runtime % 60
+                }m`}
+                size="small"
+                sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+              />
+            )}
+            <Chip
+              label={`${movie.vote_average?.toFixed(1)}/10`}
+              size="small"
+              sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+            />
+            {movie.genres?.map((genre) => (
+              <Chip
+                key={genre.id}
+                label={genre.name}
+                size="small"
+                sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
+              />
+            ))}
+          </Stack>
         </Box>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
-            <Paper
-              elevation={4}
+          <Grid item xs={12} lg={9}>
+            {/* Video Player */}
+            <Box
               sx={{
-                borderRadius: 3,
+                height: { xs: "300px", sm: "400px", md: "500px" },
+                mb: 3,
+                borderRadius: 2,
                 overflow: "hidden",
-                mb: 4,
-                bgcolor: "rgba(0, 0, 0, 0.5)",
-                backdropFilter: "blur(10px)",
-                position: "relative",
-                aspectRatio: "16/9",
               }}
             >
-              <VideoPlayer movieId={movieId} />
-            </Paper>
+              <VideoPlayer movieId={movie.id.toString()} />
+            </Box>
 
             <Paper
               sx={{
@@ -165,106 +159,92 @@ const WatchPage = ({ movieId, onBack }) => {
                 Overview
               </Typography>
               <Typography variant="body1" paragraph>
-                {movie.overview || "No overview available."}
+                {movie?.overview || "No overview available."}
               </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 4,
+                  mt: 2,
+                }}
+              >
+                {movie.vote_average && (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Rating
+                    </Typography>
+                    <Typography variant="body1">
+                      {movie.vote_average.toFixed(1)}/10
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </Paper>
 
             <CommentSection movieId={movieId} />
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} lg={3}>
+            {/* Server List */}
+            <ServerList
+              currentSource={currentSource}
+              onSourceChange={setCurrentSource}
+              streamingSources={streamingSources}
+            />
+
             <Paper
               sx={{
-                p: 3,
+                p: 2,
                 borderRadius: 2,
                 bgcolor: "rgba(30, 30, 46, 0.7)",
                 backdropFilter: "blur(10px)",
+                mb: 3,
               }}
             >
               <Typography variant="h6" gutterBottom>
-                Watch Options
+                Movie Information
               </Typography>
-              <Divider sx={{ mb: 3 }} />
 
-              <Stack spacing={3}>
-                <FormControl fullWidth>
-                  <InputLabel>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <QualityIcon sx={{ mr: 1 }} />
-                      Quality
-                    </Box>
-                  </InputLabel>
-                  <Select
-                    value={quality}
-                    onChange={handleQualityChange}
-                    label="Quality"
-                  >
-                    <MenuItem value="4K">4K Ultra HD</MenuItem>
-                    <MenuItem value="1080p">1080p Full HD</MenuItem>
-                    <MenuItem value="720p">720p HD</MenuItem>
-                    <MenuItem value="480p">480p SD</MenuItem>
-                  </Select>
-                </FormControl>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Release Date
+                </Typography>
+                <Typography variant="body1">
+                  {movie.release_date || "Unknown"}
+                </Typography>
+              </Box>
 
-                <FormControl fullWidth>
-                  <InputLabel>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <SpeedIcon sx={{ mr: 1 }} />
-                      Playback Speed
-                    </Box>
-                  </InputLabel>
-                  <Select
-                    value={playbackSpeed}
-                    onChange={handleSpeedChange}
-                    label="Playback Speed"
-                  >
-                    <MenuItem value={0.5}>0.5x</MenuItem>
-                    <MenuItem value={0.75}>0.75x</MenuItem>
-                    <MenuItem value={1.0}>Normal</MenuItem>
-                    <MenuItem value={1.25}>1.25x</MenuItem>
-                    <MenuItem value={1.5}>1.5x</MenuItem>
-                    <MenuItem value={2.0}>2x</MenuItem>
-                  </Select>
-                </FormControl>
+              {movie.production_companies &&
+                movie.production_companies.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Production
+                    </Typography>
+                    <Typography variant="body1">
+                      {movie.production_companies
+                        .map((company) => company.name)
+                        .join(", ")}
+                    </Typography>
+                  </Box>
+                )}
 
-                <FormControl fullWidth>
-                  <InputLabel>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <ClosedCaptionIcon sx={{ mr: 1 }} />
-                      Subtitles
-                    </Box>
-                  </InputLabel>
-                  <Select
-                    value={subtitle}
-                    onChange={handleSubtitleChange}
-                    label="Subtitles"
-                  >
-                    <MenuItem value="off">Off</MenuItem>
-                    <MenuItem value="English">English</MenuItem>
-                    <MenuItem value="Spanish">Spanish</MenuItem>
-                    <MenuItem value="French">French</MenuItem>
-                    <MenuItem value="German">German</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <Button
-                  variant="contained"
-                  startIcon={<SettingsIcon />}
-                  fullWidth
-                  sx={{ mt: 2 }}
-                  onClick={handleAdvancedSettings}
-                >
-                  Advanced Settings
-                </Button>
-              </Stack>
+              {movie.spoken_languages && movie.spoken_languages.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Languages
+                  </Typography>
+                  <Typography variant="body1">
+                    {movie.spoken_languages
+                      .map((lang) => lang.english_name)
+                      .join(", ")}
+                  </Typography>
+                </Box>
+              )}
             </Paper>
           </Grid>
         </Grid>
-
-        <AdvancedSettings
-          open={advancedSettingsOpen}
-          onClose={handleCloseAdvancedSettings}
-        />
       </Container>
     </Box>
   );
