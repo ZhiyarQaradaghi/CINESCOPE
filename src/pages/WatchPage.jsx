@@ -210,6 +210,8 @@ const WatchPage = ({ movieId, onBack }) => {
 
   const streamingSources = movie.imdb_id
     ? { vidsrc: `https://vidsrc.me/embed/${movie.imdb_id}/` }
+    : movie.tvId
+    ? { vidsrc: `https://vidsrc.me/embed/tv?tmdb=${movie.id}` }
     : { vidsrc: `https://vidsrc.me/embed/movie?tmdb=${movie.id}` };
 
   return (

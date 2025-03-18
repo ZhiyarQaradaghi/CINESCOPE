@@ -10,7 +10,7 @@ import {
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 
-const VideoPlayer = ({ movieId }) => {
+const VideoPlayer = ({ url, movieId }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState(false);
@@ -56,8 +56,11 @@ const VideoPlayer = ({ movieId }) => {
     setLoading(false);
   };
 
+  // Determine source URL
   let sourceUrl;
-  if (movieId && movieId.startsWith("movie?tmdb=")) {
+  if (url) {
+    sourceUrl = url;
+  } else if (movieId && movieId.startsWith("movie?tmdb=")) {
     const tmdbId = movieId.replace("movie?tmdb=", "");
     sourceUrl = `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
   } else if (movieId) {
@@ -132,47 +135,35 @@ const VideoPlayer = ({ movieId }) => {
                 height="100%"
                 frameBorder="0"
                 allowFullScreen
-                title="Movie Player"
                 onLoad={handleIframeLoad}
                 onError={handleIframeError}
-                style={{ border: "none" }}
-                sandbox="allow-same-origin allow-scripts allow-forms"
+                title="Video Player"
+                style={{ position: "absolute", top: 0, left: 0 }}
               />
             )}
           </Box>
+
+          <Fade in={showControls}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                position: "absolute",
+                bottom: 16,
+                right: 16,
+                zIndex: 2,
+              }}
+            >
+              <IconButton
+                onClick={handleFullscreenToggle}
+                sx={{ color: "white", bgcolor: "rgba(0,0,0,0.5)" }}
+              >
+                {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+              </IconButton>
+            </Stack>
+          </Fade>
         </>
       )}
-
-      <Fade in={showControls}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.7) 100%)",
-            opacity: showControls ? 1 : 0,
-            transition: "opacity 0.3s",
-            pointerEvents: "none",
-            zIndex: 2,
-          }}
-        >
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ p: 2, justifyContent: "flex-end", pointerEvents: "auto" }}
-          >
-            <IconButton onClick={handleFullscreenToggle} color="inherit">
-              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-            </IconButton>
-          </Stack>
-        </Box>
-      </Fade>
     </Box>
   );
 };

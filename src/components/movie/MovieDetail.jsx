@@ -22,7 +22,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import { useAuth } from "../../contexts/AuthContext";
 import { addToFavorites, removeFromFavorites } from "../../services/movieApi";
 
-const MovieDetail = ({ movie, onClose, onWatchClick }) => {
+const MovieDetail = ({ movie, onClose, onWatchClick, isTV = false }) => {
   const theme = useTheme();
   const { user, favorites, loadFavorites } = useAuth();
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
@@ -43,6 +43,10 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
 
   const isFavorite = favorites?.some((fav) => fav.id === movie.id);
 
+  // name for tv shows, title for movies
+  const title = isTV ? movie.name : movie.title;
+  const releaseDate = isTV ? movie.first_air_date : movie.release_date;
+
   const handleFavoriteToggle = async () => {
     if (!user) return; // if the user is not logged in
     setIsUpdatingFavorite(true);
@@ -61,13 +65,15 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
   };
 
   const handleShare = async () => {
-    const movieUrl = `${window.location.origin}/movie/${movie.id}`;
+    const movieUrl = `${window.location.origin}/${isTV ? "tv" : "movie"}/${
+      movie.id
+    }`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: movie.title,
-          text: `Check out ${movie.title} on CineScope!`,
+          title: title,
+          text: `Check out ${title} on CineScope!`,
           url: movieUrl,
         });
       } catch (error) {
@@ -153,7 +159,7 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
               </IconButton>
             </Tooltip>
           )}
-          <Tooltip title="Share movie">
+          <Tooltip title={`Share ${isTV ? "show" : "movie"}`}>
             <IconButton
               onClick={handleShare}
               sx={{
@@ -182,7 +188,7 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
               py: 1,
             }}
           >
-            Watch Movie
+            Watch {isTV ? "Show" : "Movie"}
           </Button>
         </Box>
 
@@ -192,7 +198,7 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
               <CardMedia
                 component="img"
                 image={posterPath}
-                alt={movie.title}
+                alt={title}
                 sx={{ width: "100%", height: "auto" }}
               />
             </Card>
@@ -200,18 +206,14 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
 
           <Grid item xs={12} sm={8} md={9}>
             <Typography variant="h4" component="h1" gutterBottom>
-              {movie.title}
+              {title}
               <Typography
                 component="span"
                 variant="h5"
                 color="text.secondary"
                 sx={{ ml: 1 }}
               >
-                (
-                {movie.release_date
-                  ? new Date(movie.release_date).getFullYear()
-                  : "N/A"}
-                )
+                ({releaseDate ? new Date(releaseDate).getFullYear() : "N/A"})
               </Typography>
             </Typography>
 
@@ -235,11 +237,18 @@ const MovieDetail = ({ movie, onClose, onWatchClick }) => {
                 </Typography>
               </Box>
 
-              {movie.runtime && (
-                <Typography variant="body2" color="text.secondary">
-                  {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
-                </Typography>
-              )}
+              {isTV
+                ? movie.number_of_seasons && (
+                    <Typography variant="body2" color="text.secondary">
+                      {movie.number_of_seasons} Season
+                      {movie.number_of_seasons !== 1 ? "s" : ""}
+                    </Typography>
+                  )
+                : movie.runtime && (
+                    <Typography variant="body2" color="text.secondary">
+                      {Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m
+                    </Typography>
+                  )}
 
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 {movie.genres?.map((genre) => (

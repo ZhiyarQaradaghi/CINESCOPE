@@ -10,14 +10,19 @@ import {
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
-const MovieCard = ({ movie, onClick, onWatchClick }) => {
+const MovieCard = ({ movie, onClick, onWatchClick, isTV = false }) => {
   const posterPath = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    : "https://via.placeholder.com/500x750?text=No+Poster+Available";
+    : "https://via.placeholder.com/500x750?text=No+Poster";
 
   const releaseYear = movie.release_date
-    ? new Date(movie.release_date).getFullYear()
+    ? movie.release_date.substring(0, 4)
+    : movie.first_air_date
+    ? movie.first_air_date.substring(0, 4)
     : "N/A";
+
+  // name for tv shows, title for movies
+  const title = isTV ? movie.name : movie.title;
 
   return (
     <Card
@@ -25,10 +30,9 @@ const MovieCard = ({ movie, onClick, onWatchClick }) => {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        transition: "transform 0.3s, box-shadow 0.3s",
+        transition: "transform 0.2s ease-in-out",
         "&:hover": {
-          transform: "translateY(-5px)",
-          boxShadow: 6,
+          transform: "scale(1.03)",
         },
       }}
     >
@@ -36,7 +40,7 @@ const MovieCard = ({ movie, onClick, onWatchClick }) => {
         <CardMedia
           component="img"
           image={posterPath}
-          alt={movie.title}
+          alt={title}
           sx={{
             aspectRatio: "2/3",
             objectFit: "cover",
@@ -44,7 +48,7 @@ const MovieCard = ({ movie, onClick, onWatchClick }) => {
         />
         <CardContent>
           <Typography variant="h6" component="div" noWrap>
-            {movie.title}
+            {title || "N/A"}
           </Typography>
           <Box
             sx={{
@@ -87,7 +91,7 @@ const MovieCard = ({ movie, onClick, onWatchClick }) => {
             fontWeight: 500,
           }}
         >
-          Watch Movie
+          {isTV ? "Watch Show" : "Watch Movie"}
         </Button>
       </Box>
     </Card>

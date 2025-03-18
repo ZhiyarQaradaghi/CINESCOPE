@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Paper,
-  Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-} from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem, Box } from "@mui/material";
 
 const ServerList = ({ currentSource, onSourceChange, streamingSources }) => {
   const serverNames = {
@@ -25,45 +18,50 @@ const ServerList = ({ currentSource, onSourceChange, streamingSources }) => {
   }
 
   return (
-    <Paper
-      sx={{
-        p: 2,
-        borderRadius: 2,
-        bgcolor: "rgba(30, 30, 46, 0.7)",
-        backdropFilter: "blur(10px)",
-        mb: 3,
-      }}
-    >
-      <Typography variant="h6" gutterBottom>
-        Available Servers
-      </Typography>
-      <List sx={{ width: "100%" }}>
-        {Object.entries(streamingSources).map(([key]) => {
-          if (key === "movieId") return null;
+    <Box sx={{ mb: 3 }}>
+      <FormControl
+        fullWidth
+        variant="outlined"
+        sx={{
+          bgcolor: "rgba(30, 30, 46, 0.7)",
+          borderRadius: 2,
+          backdropFilter: "blur(10px)",
+        }}
+        size="small"
+      >
+        <InputLabel id="server-select-label" sx={{ color: "white" }}>
+          Streaming Server
+        </InputLabel>
+        <Select
+          labelId="server-select-label"
+          value={currentSource}
+          onChange={(e) => onSourceChange(e.target.value)}
+          label="Streaming Server"
+          sx={{
+            color: "white",
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "rgba(255, 255, 255, 0.3)",
+            },
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "rgba(255, 255, 255, 0.5)",
+            },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderColor: "primary.main",
+            },
+          }}
+        >
+          {Object.entries(streamingSources).map(([key]) => {
+            if (key === "movieId") return null;
 
-          return (
-            <ListItem key={key} disablePadding>
-              <ListItemButton
-                selected={currentSource === key}
-                onClick={() => onSourceChange(key)}
-                sx={{
-                  borderRadius: 1,
-                  mb: 1,
-                  "&.Mui-selected": {
-                    bgcolor: "rgba(100, 108, 255, 0.2)",
-                  },
-                  "&:hover": {
-                    bgcolor: "rgba(100, 108, 255, 0.1)",
-                  },
-                }}
-              >
-                <ListItemText primary={serverNames[key] || key} />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
-    </Paper>
+            return (
+              <MenuItem key={key} value={key}>
+                {serverNames[key] || key}
+              </MenuItem>
+            );
+          })}
+        </Select>
+      </FormControl>
+    </Box>
   );
 };
 

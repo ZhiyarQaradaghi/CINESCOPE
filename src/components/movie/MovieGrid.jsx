@@ -3,7 +3,13 @@ import { Grid, Box } from "@mui/material";
 import MovieCard from "./MovieCard";
 import MovieSkeleton from "../common/MovieSkeleton";
 
-const MovieGrid = ({ movies, onMovieClick, onWatchClick, loading }) => {
+const MovieGrid = ({
+  movies,
+  onMovieClick,
+  onWatchClick,
+  loading,
+  isTV = false,
+}) => {
   if (loading) {
     return (
       <Box sx={{ my: 4 }}>
@@ -27,6 +33,7 @@ const MovieGrid = ({ movies, onMovieClick, onWatchClick, loading }) => {
               movie={movie}
               onClick={onMovieClick}
               onWatchClick={onWatchClick}
+              isTV={isTV}
             />
           </Grid>
         ))}

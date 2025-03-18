@@ -15,6 +15,12 @@ export const ServerProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const streamingSources = {
+    vidsrc: "https://vidsrc.me/embed",
+    superembed: "https://multiembed.mov/directstream.php",
+    vidcloud: "https://vidsrc.xyz/embed",
+  };
+
   const fetchSources = async () => {
     try {
       setIsLoading(true);
@@ -28,10 +34,44 @@ export const ServerProvider = ({ children }) => {
     }
   };
 
+  const getStreamingUrl = (
+    source,
+    mediaType,
+    id,
+    season = null,
+    episode = null
+  ) => {
+    if (mediaType === "tv" && season && episode) {
+      switch (source) {
+        case "vidsrc":
+          return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+        case "superembed":
+          return `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
+        case "vidcloud":
+          return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+        default:
+          return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+      }
+    } else {
+      // Movie URLs
+      switch (source) {
+        case "vidsrc":
+          return `https://vidsrc.me/embed/movie?tmdb=${id}`;
+        case "superembed":
+          return `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`;
+        case "vidcloud":
+          return `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
+        default:
+          return `https://vidsrc.me/embed/movie?tmdb=${id}`;
+      }
+    }
+  };
+
   const value = {
     currentSource,
     setCurrentSource,
-    streamingSources: { vidsrc: "#" },
+    streamingSources,
+    getStreamingUrl,
     error,
     setError,
     isLoading,

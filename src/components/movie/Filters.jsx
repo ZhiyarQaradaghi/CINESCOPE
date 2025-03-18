@@ -16,6 +16,7 @@ const Filters = ({
   onYearChange,
   category,
   onCategoryChange,
+  isTV = false,
 }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 70 }, (_, i) => currentYear - i);
@@ -43,7 +44,11 @@ const Filters = ({
           >
             <MenuItem value="popular">Popular</MenuItem>
             <MenuItem value="top_rated">Top Rated</MenuItem>
-            <MenuItem value="upcoming">Upcoming</MenuItem>
+            {isTV ? (
+              <MenuItem value="on_the_air">On Air</MenuItem>
+            ) : (
+              <MenuItem value="upcoming">Upcoming</MenuItem>
+            )}
           </Select>
         </FormControl>
 
@@ -65,11 +70,13 @@ const Filters = ({
         </FormControl>
 
         <FormControl>
-          <InputLabel id="year-select-label">Year</InputLabel>
+          <InputLabel id="year-select-label">
+            {isTV ? "First Air Date" : "Release Year"}
+          </InputLabel>
           <Select
             labelId="year-select-label"
             value={yearRange}
-            label="Year"
+            label={isTV ? "First Air Date" : "Release Year"}
             onChange={(e) => onYearChange(e.target.value)}
           >
             <MenuItem value="">All Years</MenuItem>

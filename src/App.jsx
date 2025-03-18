@@ -15,6 +15,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import ExplorePage from "./pages/ExplorePage";
 import WatchlistPage from "./pages/WatchlistPage";
+import TVShowsPage from "./pages/TVShowsPage";
 
 const theme = createTheme({
   palette: {
@@ -66,6 +67,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/tv" element={<TVShowsPage />} />
+              <Route path="/tv/:category" element={<TVShowsPage />} />
             </Routes>
           </Container>
           <Footer />
