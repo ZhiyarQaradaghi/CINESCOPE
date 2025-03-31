@@ -77,3 +77,13 @@ export const fetchTVShowSeason = async (id, seasonNumber) => {
 };
 
 export const fetchTVShowSeasons = fetchTVShowSeason;
+
+export const fetchTVStreamingSources = async (id, season, episode) => {
+  return makeRequest(
+    `/tv/${id}/streaming-sources?season=${season}&episode=${episode}`
+  );
+};
+
+export const fetchTVServers = async (id, season, episode) => {
+  return makeRequest(`/tv/${id}/servers?season=${season}&episode=${episode}`);
+};

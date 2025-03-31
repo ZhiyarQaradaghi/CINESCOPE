@@ -10,11 +10,10 @@ import {
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 
-const VideoPlayer = ({ url, movieId }) => {
+const VideoPlayer = ({ url, isLoading }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
   const playerContainerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
   const iframeRef = useRef(null);
@@ -48,25 +47,28 @@ const VideoPlayer = ({ url, movieId }) => {
   }, []);
 
   const handleIframeLoad = () => {
-    setLoading(false);
+    setError(false);
   };
 
   const handleIframeError = () => {
     setError(true);
-    setLoading(false);
   };
 
-  // Determine source URL
-  let sourceUrl;
-  if (url) {
-    sourceUrl = url;
-  } else if (movieId && movieId.startsWith("movie?tmdb=")) {
-    const tmdbId = movieId.replace("movie?tmdb=", "");
-    sourceUrl = `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
-  } else if (movieId) {
-    sourceUrl = `https://vidsrc.me/embed/movie?tmdb=${movieId}`;
-  } else {
-    sourceUrl = null;
+  // Show loading state if URL is being fetched
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          bgcolor: "rgba(0,0,0,0.7)",
+        }}
+      >
+        <CircularProgress color="primary" />
+      </Box>
+    );
   }
 
   return (
@@ -101,24 +103,6 @@ const VideoPlayer = ({ url, movieId }) => {
         </Box>
       ) : (
         <>
-          {loading && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 1,
-                bgcolor: "rgba(0,0,0,0.7)",
-              }}
-            >
-              <CircularProgress color="primary" />
-            </Box>
-          )}
           <Box
             sx={{
               position: "relative",
@@ -127,10 +111,10 @@ const VideoPlayer = ({ url, movieId }) => {
               overflow: "hidden",
             }}
           >
-            {sourceUrl && (
+            {url && (
               <iframe
                 ref={iframeRef}
-                src={sourceUrl}
+                src={url}
                 width="100%"
                 height="100%"
                 frameBorder="0"

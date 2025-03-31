@@ -36,6 +36,7 @@ import VideoPlayer from "../components/player/VideoPlayer";
 import ServerList from "../components/player/ServerList";
 import { useServer } from "../contexts/ServerContext";
 import { useAuth } from "../contexts/AuthContext";
+import { makeRequest } from "../services/apiUtils";
 
 const WatchPage = ({ movieId, onBack }) => {
   const [movie, setMovie] = useState(null);
@@ -51,6 +52,10 @@ const WatchPage = ({ movieId, onBack }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+
+  const [streamingSources, setStreamingSources] = useState({});
+  const [streamingUrl, setStreamingUrl] = useState("");
+  const [loadingUrl, setLoadingUrl] = useState(true);
 
   useEffect(() => {
     const loadMovie = async () => {
@@ -77,6 +82,64 @@ const WatchPage = ({ movieId, onBack }) => {
       setIsInWatchlist(favorites.some((fav) => fav.id === movie.id));
     }
   }, [user, favorites, movie]);
+
+  useEffect(() => {
+    const fetchServers = async () => {
+      if (!movie?.id) return;
+
+      try {
+        const response = await makeRequest(`/movies/${movie.id}/servers`);
+
+        if (response && response.data) {
+          const sources = {};
+          response.data.forEach((server) => {
+            if (server.status === "online") {
+              sources[server.id] = server.name;
+            }
+          });
+          setStreamingSources(sources);
+
+          if (!currentSource || !sources[currentSource]) {
+            const firstSource = Object.keys(sources)[0];
+            if (firstSource) {
+              setCurrentSource(firstSource);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching movie servers:", error);
+      }
+    };
+
+    fetchServers();
+  }, [movie, setCurrentSource]);
+
+  useEffect(() => {
+    const fetchStreamingUrl = async () => {
+      if (!movie?.id || !currentSource) return;
+
+      setLoadingUrl(true);
+      try {
+        const response = await makeRequest(
+          `/movies/${movie.id}/streaming-sources`
+        );
+        console.log("Movie streaming sources response:", response);
+
+        if (response && response.data && response.data[currentSource]) {
+          setStreamingUrl(response.data[currentSource]);
+        } else {
+          console.warn("No streaming URL found for source:", currentSource);
+          setStreamingUrl("");
+        }
+      } catch (error) {
+        console.error("Error fetching movie streaming URL:", error);
+      } finally {
+        setLoadingUrl(false);
+      }
+    };
+
+    fetchStreamingUrl();
+  }, [movie, currentSource]);
 
   const handleWatchlistToggle = async () => {
     if (!user) {
@@ -207,12 +270,6 @@ const WatchPage = ({ movieId, onBack }) => {
       </Container>
     );
   }
-
-  const streamingSources = movie.imdb_id
-    ? { vidsrc: `https://vidsrc.me/embed/${movie.imdb_id}/` }
-    : movie.tvId
-    ? { vidsrc: `https://vidsrc.me/embed/tv?tmdb=${movie.id}` }
-    : { vidsrc: `https://vidsrc.me/embed/movie?tmdb=${movie.id}` };
 
   return (
     <Box
@@ -374,7 +431,7 @@ const WatchPage = ({ movieId, onBack }) => {
                 overflow: "hidden",
               }}
             >
-              <VideoPlayer movieId={movie.id.toString()} />
+              <VideoPlayer url={streamingUrl} isLoading={loadingUrl} />
             </Box>
 
             <Paper

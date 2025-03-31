@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import { makeRequest } from "../services/apiUtils";
 
 const ServerContext = createContext();
 
@@ -14,56 +15,107 @@ export const ServerProvider = ({ children }) => {
   const [currentSource, setCurrentSource] = useState("vidsrc");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [availableSources, setAvailableSources] = useState([]);
+  const [streamingSources, setStreamingSources] = useState({
+    vidsrc: "VidSrc",
+    superembed: "SuperEmbed",
+    vidcloud: "VidCloud",
+    fsapi: "FSAPI",
+    curtstream: "CurtStream",
+    moviewp: "MovieWP",
+    apimdb: "ApiMDB",
+    gomo: "GoMo",
+  });
 
-  const streamingSources = {
-    vidsrc: "https://vidsrc.me/embed",
-    superembed: "https://multiembed.mov/directstream.php",
-    vidcloud: "https://vidsrc.xyz/embed",
-  };
-
-  const fetchSources = async () => {
+  // We don't need to fetch sources on mount anymore since we're using
+  // specific endpoints for each movie/TV show
+  // This prevents the 404 error for /api/servers/status
+  const fetchSources = async (mediaType, id, season = null, episode = null) => {
     try {
       setIsLoading(true);
       setError(null);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      let endpoint;
+      if (mediaType === "tv" && season && episode) {
+        endpoint = `/tv/${id}/servers?season=${season}&episode=${episode}`;
+      } else if (mediaType === "movie") {
+        endpoint = `/movies/${id}/servers`;
+      } else {
+        // Default fallback - use hardcoded sources
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await makeRequest(endpoint);
+
+      if (response && response.data) {
+        // Convert the array of server objects to the format expected by the UI
+        const sourcesObj = {};
+        response.data.forEach((server) => {
+          if (server.status === "online") {
+            sourcesObj[server.id] = server.name;
+          }
+        });
+
+        setStreamingSources(sourcesObj);
+        setAvailableSources(response.data);
+
+        // If current source is not available, select the first available one
+        if (
+          response.data.length > 0 &&
+          !response.data.find(
+            (s) => s.id === currentSource && s.status === "online"
+          )
+        ) {
+          const firstAvailable = response.data.find(
+            (s) => s.status === "online"
+          );
+          if (firstAvailable) {
+            setCurrentSource(firstAvailable.id);
+          }
+        }
+      }
+
       setIsLoading(false);
     } catch (error) {
-      console.error("Error:", error);
-      setError("Video streaming has been disabled");
+      console.error("Error fetching streaming sources:", error);
+      setError("Video streaming sources unavailable");
       setIsLoading(false);
     }
   };
 
-  const getStreamingUrl = (
+  const getStreamingUrl = async (
     source,
     mediaType,
     id,
     season = null,
     episode = null
   ) => {
-    if (mediaType === "tv" && season && episode) {
-      switch (source) {
-        case "vidsrc":
-          return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
-        case "superembed":
-          return `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${season}&e=${episode}`;
-        case "vidcloud":
-          return `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
-        default:
-          return `https://vidsrc.me/embed/tv?tmdb=${id}&season=${season}&episode=${episode}`;
+    try {
+      let endpoint;
+      let queryParams = "";
+
+      if (mediaType === "tv" && season && episode) {
+        endpoint = `/tv/${id}/streaming-sources`;
+        queryParams = `?season=${season}&episode=${episode}`;
+      } else if (mediaType === "movie") {
+        endpoint = `/movies/${id}/streaming-sources`;
+      } else {
+        return "";
       }
-    } else {
-      // Movie URLs
-      switch (source) {
-        case "vidsrc":
-          return `https://vidsrc.me/embed/movie?tmdb=${id}`;
-        case "superembed":
-          return `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`;
-        case "vidcloud":
-          return `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
-        default:
-          return `https://vidsrc.me/embed/movie?tmdb=${id}`;
+
+      const response = await makeRequest(endpoint + queryParams);
+
+      if (response && response.data) {
+        // Return the URL for the requested source
+        return response.data[source] || "";
       }
+
+      return "";
+    } catch (error) {
+      console.error("Error fetching streaming URL:", error);
+      setError("Failed to get streaming URL");
+      return "";
     }
   };
 
@@ -76,6 +128,7 @@ export const ServerProvider = ({ children }) => {
     setError,
     isLoading,
     fetchSources,
+    availableSources,
   };
 
   return (

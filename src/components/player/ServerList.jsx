@@ -1,20 +1,26 @@
 import React from "react";
-import { FormControl, InputLabel, Select, MenuItem, Box } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Typography,
+} from "@mui/material";
 
 const ServerList = ({ currentSource, onSourceChange, streamingSources }) => {
-  const serverNames = {
-    vidsrc: "VidSrc",
-    fsapi: "FSAPI",
-    curtstream: "CurtStream",
-    moviewp: "MovieWP",
-    apimdb: "ApiMDB",
-    gomo: "GoMo",
-    vidcloud: "VidCloud",
-    superembed: "SuperEmbed",
-  };
-
-  if (!streamingSources) {
-    return null;
+  if (!streamingSources || Object.keys(streamingSources).length === 0) {
+    return (
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ textAlign: "center" }}
+        >
+          No streaming servers available
+        </Typography>
+      </Box>
+    );
   }
 
   return (
@@ -50,12 +56,12 @@ const ServerList = ({ currentSource, onSourceChange, streamingSources }) => {
             },
           }}
         >
-          {Object.entries(streamingSources).map(([key]) => {
-            if (key === "movieId") return null;
+          {Object.entries(streamingSources).map(([key, name]) => {
+            if (key === "movieId" || key === "imdbId") return null;
 
             return (
               <MenuItem key={key} value={key}>
-                {serverNames[key] || key}
+                {name}
               </MenuItem>
             );
           })}

@@ -37,6 +37,7 @@ import VideoPlayer from "../components/player/VideoPlayer";
 import ServerList from "../components/player/ServerList";
 import { useServer } from "../contexts/ServerContext";
 import { useAuth } from "../contexts/AuthContext";
+import { makeRequest } from "../services/apiUtils";
 
 const WatchTVShowPage = ({ tvId, onBack }) => {
   const [show, setShow] = useState(null);
@@ -48,7 +49,10 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [shareMenuAnchor, setShareMenuAnchor] = useState(null);
   const { user, favorites, loadFavorites } = useAuth();
-  const { currentSource, setCurrentSource, getStreamingUrl } = useServer();
+  const { currentSource, setCurrentSource } = useServer();
+  const [streamingUrl, setStreamingUrl] = useState("");
+  const [loadingUrl, setLoadingUrl] = useState(true);
+  const [tvStreamingSources, setTvStreamingSources] = useState({});
 
   useEffect(() => {
     const fetchShowDetails = async () => {
@@ -101,6 +105,59 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
 
     fetchSeasonDetails();
   }, [tvId, selectedSeason, show]);
+
+  useEffect(() => {
+    const fetchStreamingUrl = async () => {
+      if (!tvId || !selectedSeason || !selectedEpisode) return;
+
+      setLoadingUrl(true);
+      try {
+        // Use the API endpoint for TV shows
+        const response = await makeRequest(
+          `/tv/${tvId}/streaming-sources?season=${selectedSeason}&episode=${selectedEpisode}`
+        );
+
+        if (response && response.data && response.data[currentSource]) {
+          setStreamingUrl(response.data[currentSource]);
+        } else {
+          setStreamingUrl("");
+        }
+      } catch (error) {
+        console.error("Error fetching streaming URL:", error);
+      } finally {
+        setLoadingUrl(false);
+      }
+    };
+
+    fetchStreamingUrl();
+  }, [tvId, selectedSeason, selectedEpisode, currentSource]);
+
+  useEffect(() => {
+    const fetchServers = async () => {
+      if (!tvId || !selectedSeason || !selectedEpisode) return;
+
+      try {
+        const response = await makeRequest(
+          `/tv/${tvId}/servers?season=${selectedSeason}&episode=${selectedEpisode}`
+        );
+
+        if (response && response.data) {
+          // Convert to the format expected by ServerList
+          const sources = {};
+          response.data.forEach((server) => {
+            if (server.status === "online") {
+              sources[server.id] = server.name;
+            }
+          });
+          setTvStreamingSources(sources);
+        }
+      } catch (error) {
+        console.error("Error fetching streaming servers:", error);
+      }
+    };
+
+    fetchServers();
+  }, [tvId, selectedSeason, selectedEpisode]);
 
   const handleSeasonChange = (event) => {
     setSelectedSeason(event.target.value);
@@ -218,40 +275,6 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
   );
 
   const isFavorite = favorites?.some((fav) => fav.id === show.id);
-
-  // For the streaming URL
-  const streamingUrl = getStreamingUrl(
-    currentSource,
-    "tv",
-    tvId,
-    selectedSeason,
-    selectedEpisode
-  );
-
-  // For the ServerList
-  const tvStreamingSources = {
-    vidsrc: getStreamingUrl(
-      "vidsrc",
-      "tv",
-      tvId,
-      selectedSeason,
-      selectedEpisode
-    ),
-    superembed: getStreamingUrl(
-      "superembed",
-      "tv",
-      tvId,
-      selectedSeason,
-      selectedEpisode
-    ),
-    vidcloud: getStreamingUrl(
-      "vidcloud",
-      "tv",
-      tvId,
-      selectedSeason,
-      selectedEpisode
-    ),
-  };
 
   return (
     <Box
@@ -388,10 +411,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
                     height: "100%",
                   }}
                 >
-                  <VideoPlayer
-                    url={streamingUrl}
-                    onError={() => console.error("Video failed to load")}
-                  />
+                  <VideoPlayer url={streamingUrl} isLoading={loadingUrl} />
                 </Box>
               </Box>
             </Box>
