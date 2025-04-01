@@ -16,6 +16,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ExplorePage from "./pages/ExplorePage";
 import WatchlistPage from "./pages/WatchlistPage";
 import TVShowsPage from "./pages/TVShowsPage";
+import TestPage from "./pages/TestPage";
 
 const theme = createTheme({
   palette: {
@@ -69,6 +70,7 @@ function App() {
               />
               <Route path="/tv" element={<TVShowsPage />} />
               <Route path="/tv/:category" element={<TVShowsPage />} />
+              <Route path="/test" element={<TestPage />} />
             </Routes>
           </Container>
           <Footer />
