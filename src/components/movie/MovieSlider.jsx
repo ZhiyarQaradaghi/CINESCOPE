@@ -12,10 +12,12 @@ import {
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { useNavigate } from "react-router-dom";
 
-const MovieSlider = ({ movies, onMovieClick, onWatchClick }) => {
+const MovieSlider = ({ movies, onMovieClick, isTV = false }) => {
   const sliderRef = useRef(null);
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -32,6 +34,15 @@ const MovieSlider = ({ movies, onMovieClick, onWatchClick }) => {
         left: sliderRef.current.offsetWidth * 0.75,
         behavior: "smooth",
       });
+    }
+  };
+
+  const handleWatchClick = (id, e) => {
+    e.stopPropagation();
+    if (isTV) {
+      navigate(`/watch/tv/${id}/1/1`);
+    } else {
+      navigate(`/watch/${id}`);
     }
   };
 
@@ -140,10 +151,7 @@ const MovieSlider = ({ movies, onMovieClick, onWatchClick }) => {
                       color: "white",
                       "&:hover": { bgcolor: theme.palette.primary.dark },
                     }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onWatchClick(movie.id);
-                    }}
+                    onClick={(e) => handleWatchClick(movie.id, e)}
                   >
                     <PlayArrowIcon />
                   </IconButton>

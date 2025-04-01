@@ -38,8 +38,11 @@ import ServerList from "../components/player/ServerList";
 import { useServer } from "../contexts/ServerContext";
 import { useAuth } from "../contexts/AuthContext";
 import { makeRequest } from "../services/apiUtils";
+import { useParams, useNavigate } from "react-router-dom";
 
-const WatchTVShowPage = ({ tvId, onBack }) => {
+const WatchTVShowPage = () => {
+  const { showId, season, episode } = useParams();
+  const navigate = useNavigate();
   const [show, setShow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedSeason, setSelectedSeason] = useState(1);
@@ -54,25 +57,27 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
   const [loadingUrl, setLoadingUrl] = useState(true);
   const [tvStreamingSources, setTvStreamingSources] = useState({});
 
+  // Convert string parameters to numbers
+  const seasonNumber = parseInt(season, 10);
+  const episodeNumber = parseInt(episode, 10);
+
+  // Replace onBack prop with this function
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   useEffect(() => {
     const fetchShowDetails = async () => {
       try {
-        console.log("Fetching TV show details for ID:", tvId);
+        console.log("Fetching TV show details for ID:", showId);
         setLoading(true);
-        const details = await fetchTVShowDetails(tvId);
+        const details = await fetchTVShowDetails(showId);
         console.log("TV show details received:", details);
         setShow(details);
 
-        // season 1 is default
-        if (details.seasons && details.seasons.length > 0) {
-          // find first regular season
-          const firstRegularSeason = details.seasons.find(
-            (s) => s.season_number > 0
-          );
-          if (firstRegularSeason) {
-            setSelectedSeason(firstRegularSeason.season_number);
-          }
-        }
+        // Set the selected season and episode from URL params
+        setSelectedSeason(seasonNumber);
+        setSelectedEpisode(episodeNumber);
       } catch (error) {
         console.error("Error fetching TV show details:", error);
       } finally {
@@ -81,7 +86,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
     };
 
     fetchShowDetails();
-  }, [tvId]);
+  }, [showId, seasonNumber, episodeNumber]);
 
   useEffect(() => {
     const fetchSeasonDetails = async () => {
@@ -89,7 +94,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
 
       try {
         setLoading(true);
-        const seasonDetails = await fetchTVShowSeason(tvId, selectedSeason);
+        const seasonDetails = await fetchTVShowSeason(showId, selectedSeason);
         setSeasonData(seasonDetails);
 
         // episode 1 is default when changing seasons
@@ -104,16 +109,16 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
     };
 
     fetchSeasonDetails();
-  }, [tvId, selectedSeason, show]);
+  }, [showId, selectedSeason, show]);
 
   useEffect(() => {
     const fetchStreamingUrl = async () => {
-      if (!tvId || !selectedSeason || !selectedEpisode) return;
+      if (!showId || !selectedSeason || !selectedEpisode) return;
 
       setLoadingUrl(true);
       try {
         const response = await makeRequest(
-          `/tv/${tvId}/streaming-sources?season=${selectedSeason}&episode=${selectedEpisode}`
+          `/tv/${showId}/streaming-sources?season=${selectedSeason}&episode=${selectedEpisode}`
         );
 
         console.log("Full TV API response:", response);
@@ -150,7 +155,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
     };
 
     fetchStreamingUrl();
-  }, [tvId, selectedSeason, selectedEpisode, currentSource]);
+  }, [showId, selectedSeason, selectedEpisode, currentSource]);
 
   const handleSeasonChange = (event) => {
     setSelectedSeason(event.target.value);
@@ -169,7 +174,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
   };
 
   const handleShare = async (platform) => {
-    const showUrl = `${window.location.origin}/tv/${tvId}`;
+    const showUrl = `${window.location.origin}/tv/${showId}`;
     const showTitle = show?.name || "this TV show";
     let shareUrl;
 
@@ -255,7 +260,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
           TV Show not found
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-          <Button variant="contained" onClick={onBack}>
+          <Button variant="contained" onClick={handleBack}>
             Go Back
           </Button>
         </Box>
@@ -280,7 +285,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
       <Container maxWidth="xl">
         <Box sx={{ mb: 4 }}>
           <IconButton
-            onClick={onBack}
+            onClick={handleBack}
             sx={{
               color: "white",
               bgcolor: "rgba(0,0,0,0.3)",
@@ -519,7 +524,7 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
               </Paper>
             )}
 
-            <CommentSection contentId={tvId} contentType="tv" />
+            <CommentSection contentId={showId} contentType="tv" />
           </Grid>
 
           <Grid item xs={12} md={4}>

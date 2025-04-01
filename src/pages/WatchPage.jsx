@@ -36,8 +36,11 @@ import VideoPlayer from "../components/player/VideoPlayer";
 import ServerList from "../components/player/ServerList";
 import { useServer } from "../contexts/ServerContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useParams, useNavigate } from "react-router-dom";
 
-const WatchPage = ({ movieId, onBack }) => {
+const WatchPage = () => {
+  const { movieId } = useParams();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const { currentSource, setCurrentSource } = useServer();
@@ -55,6 +58,10 @@ const WatchPage = ({ movieId, onBack }) => {
   const [streamingSources, setStreamingSources] = useState({});
   const [streamingUrl, setStreamingUrl] = useState("");
   const [loadingUrl, setLoadingUrl] = useState(true);
+
+  const handleBack = () => {
+    navigate(-1);
+  };
 
   useEffect(() => {
     const loadMovie = async () => {
@@ -227,7 +234,7 @@ const WatchPage = ({ movieId, onBack }) => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper sx={{ p: 4, textAlign: "center" }}>
           <Typography>Movie not found</Typography>
-          <IconButton onClick={onBack} sx={{ mt: 2 }}>
+          <IconButton onClick={handleBack} sx={{ mt: 2 }}>
             <ArrowBackIcon /> Go Back
           </IconButton>
         </Paper>
@@ -246,7 +253,7 @@ const WatchPage = ({ movieId, onBack }) => {
       <Container maxWidth="xl">
         <Box sx={{ mb: 4 }}>
           <IconButton
-            onClick={onBack}
+            onClick={handleBack}
             sx={{
               color: "white",
               bgcolor: "rgba(0,0,0,0.3)",

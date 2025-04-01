@@ -21,11 +21,13 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ShareIcon from "@mui/icons-material/Share";
 import { useAuth } from "../../contexts/AuthContext";
 import { addToFavorites, removeFromFavorites } from "../../services/movieApi";
+import { useNavigate } from "react-router-dom";
 
-const MovieDetail = ({ movie, onClose, onWatchClick, isTV = false }) => {
+const MovieDetail = ({ movie, onClose, isTV = false }) => {
   const theme = useTheme();
   const { user, favorites, loadFavorites } = useAuth();
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
+  const navigate = useNavigate();
 
   if (!movie) return null;
 
@@ -64,6 +66,16 @@ const MovieDetail = ({ movie, onClose, onWatchClick, isTV = false }) => {
     }
   };
 
+  const handleWatchClick = () => {
+    if (isTV) {
+      // For TV shows, navigate to the first episode of the first season
+      navigate(`/watch/tv/${movie.id}/1/1`);
+    } else {
+      // For movies
+      navigate(`/watch/${movie.id}`);
+    }
+  };
+
   const handleShare = async () => {
     const movieUrl = `${window.location.origin}/${isTV ? "tv" : "movie"}/${
       movie.id
@@ -85,20 +97,24 @@ const MovieDetail = ({ movie, onClose, onWatchClick, isTV = false }) => {
   };
 
   return (
-    <Box sx={{ position: "relative" }}>
+    <Box
+      sx={{
+        position: "relative",
+        bgcolor: "background.paper",
+        borderRadius: 2,
+        overflow: "hidden",
+      }}
+    >
       <IconButton
-        aria-label="close"
         onClick={onClose}
         sx={{
           position: "absolute",
-          right: 8,
-          top: 8,
+          right: 16,
+          top: 16,
+          bgcolor: "rgba(0, 0, 0, 0.6)",
           color: "white",
-          bgcolor: "rgba(0, 0, 0, 0.5)",
           zIndex: 2,
-          "&:hover": {
-            bgcolor: "rgba(255, 0, 0, 0.7)",
-          },
+          "&:hover": { bgcolor: "rgba(0, 0, 0, 0.8)" },
         }}
       >
         <CloseIcon />
@@ -111,21 +127,10 @@ const MovieDetail = ({ movie, onClose, onWatchClick, isTV = false }) => {
             top: 0,
             left: 0,
             width: "100%",
-            height: "300px",
-            backgroundImage: `url(${backdropPath})`,
+            height: 250,
+            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.9)), url(${backdropPath})`,
             backgroundSize: "cover",
-            backgroundPosition: "center top",
-            backgroundRepeat: "no-repeat",
-            opacity: 0.3,
-            "&::after": {
-              content: '""',
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              width: "100%",
-              height: "100px",
-              background: `linear-gradient(to bottom, transparent, ${theme.palette.background.paper})`,
-            },
+            backgroundPosition: "center",
           }}
         />
       )}
@@ -178,7 +183,7 @@ const MovieDetail = ({ movie, onClose, onWatchClick, isTV = false }) => {
           <Button
             variant="contained"
             startIcon={<PlayArrowIcon />}
-            onClick={() => onWatchClick(movie.id)}
+            onClick={handleWatchClick}
             sx={{
               borderRadius: 2,
               textTransform: "none",

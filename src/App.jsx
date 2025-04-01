@@ -17,6 +17,9 @@ import ExplorePage from "./pages/ExplorePage";
 import WatchlistPage from "./pages/WatchlistPage";
 import TVShowsPage from "./pages/TVShowsPage";
 import TestPage from "./pages/TestPage";
+import WatchPage from "./pages/WatchPage";
+import WatchTVShowPage from "./pages/WatchTVShowPage";
+import { ServerProvider } from "./contexts/ServerContext";
 
 const theme = createTheme({
   palette: {
@@ -70,6 +73,22 @@ function App() {
               />
               <Route path="/tv" element={<TVShowsPage />} />
               <Route path="/tv/:category" element={<TVShowsPage />} />
+              <Route
+                path="/watch/:movieId"
+                element={
+                  <ServerProvider>
+                    <WatchPage />
+                  </ServerProvider>
+                }
+              />
+              <Route
+                path="/watch/tv/:showId/:season/:episode"
+                element={
+                  <ServerProvider>
+                    <WatchTVShowPage />
+                  </ServerProvider>
+                }
+              />
               <Route path="/test" element={<TestPage />} />
             </Routes>
           </Container>
