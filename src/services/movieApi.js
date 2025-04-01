@@ -1,30 +1,4 @@
-const API_BASE_URL =
-  import.meta.env.VITE_SOCKET_SERVER || "http://localhost:5000/api";
-
-const makeRequest = async (endpoint, options = {}) => {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    console.log("Fetching:", url);
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.data;
-  } catch (error) {
-    console.error(`API Request Error for ${endpoint}:`, error);
-    throw error;
-  }
-};
+import { makeRequest } from "./apiUtils";
 
 const getToken = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -48,8 +22,7 @@ export const fetchPopularMovies = async (page = 1, params = {}) => {
   }).toString();
 
   console.log(`Fetching popular movies with params: ${queryParams}`);
-  const response = await makeRequest(`/movies/popular?${queryParams}`);
-  return response;
+  return makeRequest(`/movies/popular?${queryParams}`);
 };
 
 export const fetchTopRatedMovies = async (page = 1, params = {}) => {
@@ -64,8 +37,7 @@ export const fetchTopRatedMovies = async (page = 1, params = {}) => {
   }).toString();
 
   console.log(`Fetching top rated movies with params: ${queryParams}`);
-  const response = await makeRequest(`/movies/top-rated?${queryParams}`);
-  return response;
+  return makeRequest(`/movies/top-rated?${queryParams}`);
 };
 
 export const fetchUpcomingMovies = async (page = 1, params = {}) => {
@@ -80,8 +52,7 @@ export const fetchUpcomingMovies = async (page = 1, params = {}) => {
   }).toString();
 
   console.log(`Fetching upcoming movies with params: ${queryParams}`);
-  const response = await makeRequest(`/movies/upcoming?${queryParams}`);
-  return response;
+  return makeRequest(`/movies/upcoming?${queryParams}`);
 };
 
 export const searchMovies = async (query, page = 1, params = {}) => {

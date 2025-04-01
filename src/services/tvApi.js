@@ -17,8 +17,7 @@ export const fetchPopularTVShows = async (page = 1, params = {}) => {
   }).toString();
 
   console.log(`Fetching popular TV shows with params: ${queryParams}`);
-  const response = await makeRequest(`/tv/popular?${queryParams}`);
-  return response;
+  return makeRequest(`/tv/popular?${queryParams}`);
 };
 
 export const fetchTopRatedTVShows = async (page = 1, params = {}) => {
