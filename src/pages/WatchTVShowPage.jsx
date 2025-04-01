@@ -112,18 +112,38 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
 
       setLoadingUrl(true);
       try {
-        // Use the API endpoint for TV shows
         const response = await makeRequest(
           `/tv/${tvId}/streaming-sources?season=${selectedSeason}&episode=${selectedEpisode}`
         );
 
-        if (response && response.data && response.data[currentSource]) {
-          setStreamingUrl(response.data[currentSource]);
+        console.log("Full TV API response:", response);
+
+        if (response) {
+          setTvStreamingSources(response);
+
+          if (response[currentSource]) {
+            setStreamingUrl(response[currentSource]);
+          } else {
+            console.log("No streaming URL found for source:", currentSource);
+            const firstAvailableSource = Object.keys(response).find(
+              (key) =>
+                response[key] &&
+                typeof response[key] === "string" &&
+                key !== "imdbId"
+            );
+            if (firstAvailableSource) {
+              setCurrentSource(firstAvailableSource);
+              setStreamingUrl(response[firstAvailableSource]);
+            } else {
+              setStreamingUrl("");
+            }
+          }
         } else {
           setStreamingUrl("");
         }
       } catch (error) {
         console.error("Error fetching streaming URL:", error);
+        setStreamingUrl("");
       } finally {
         setLoadingUrl(false);
       }
@@ -131,33 +151,6 @@ const WatchTVShowPage = ({ tvId, onBack }) => {
 
     fetchStreamingUrl();
   }, [tvId, selectedSeason, selectedEpisode, currentSource]);
-
-  useEffect(() => {
-    const fetchServers = async () => {
-      if (!tvId || !selectedSeason || !selectedEpisode) return;
-
-      try {
-        const response = await makeRequest(
-          `/tv/${tvId}/servers?season=${selectedSeason}&episode=${selectedEpisode}`
-        );
-
-        if (response && response.data) {
-          // Convert to the format expected by ServerList
-          const sources = {};
-          response.data.forEach((server) => {
-            if (server.status === "online") {
-              sources[server.id] = server.name;
-            }
-          });
-          setTvStreamingSources(sources);
-        }
-      } catch (error) {
-        console.error("Error fetching streaming servers:", error);
-      }
-    };
-
-    fetchServers();
-  }, [tvId, selectedSeason, selectedEpisode]);
 
   const handleSeasonChange = (event) => {
     setSelectedSeason(event.target.value);

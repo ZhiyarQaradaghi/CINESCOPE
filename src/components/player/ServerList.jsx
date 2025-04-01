@@ -23,6 +23,35 @@ const ServerList = ({ currentSource, onSourceChange, streamingSources }) => {
     );
   }
 
+  const serverNames = {
+    vidsrc: "VidSrc",
+    vidcloud: "VidCloud",
+    superembed: "SuperEmbed",
+    fsapi: "FSAPI",
+    curtstream: "CurtStream",
+    moviewp: "MovieWP",
+    apimdb: "ApiMDB",
+    gomo: "GoMo",
+  };
+
+  const availableSources = Object.keys(streamingSources).filter(
+    (key) => key !== "imdbId" && typeof streamingSources[key] === "string"
+  );
+
+  if (availableSources.length === 0) {
+    return (
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ textAlign: "center" }}
+        >
+          No streaming servers available
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ mb: 3 }}>
       <FormControl
@@ -56,15 +85,11 @@ const ServerList = ({ currentSource, onSourceChange, streamingSources }) => {
             },
           }}
         >
-          {Object.entries(streamingSources).map(([key, name]) => {
-            if (key === "movieId" || key === "imdbId") return null;
-
-            return (
-              <MenuItem key={key} value={key}>
-                {name}
-              </MenuItem>
-            );
-          })}
+          {availableSources.map((key) => (
+            <MenuItem key={key} value={key}>
+              {serverNames[key] || key.charAt(0).toUpperCase() + key.slice(1)}
+            </MenuItem>
+          ))}
         </Select>
       </FormControl>
     </Box>

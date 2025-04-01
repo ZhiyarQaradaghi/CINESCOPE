@@ -28,7 +28,7 @@ import RedditIcon from "@mui/icons-material/Reddit";
 import LinkIcon from "@mui/icons-material/Link";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import { fetchMovieDetails } from "../services/movieApi";
+import { fetchMovieDetails, fetchStreamingSources } from "../services/movieApi";
 import { addToFavorites, removeFromFavorites } from "../services/movieApi";
 import Loader from "../components/common/Loader";
 import CommentSection from "../components/comments/CommentSection";
@@ -36,7 +36,6 @@ import VideoPlayer from "../components/player/VideoPlayer";
 import ServerList from "../components/player/ServerList";
 import { useServer } from "../contexts/ServerContext";
 import { useAuth } from "../contexts/AuthContext";
-import { makeRequest } from "../services/apiUtils";
 
 const WatchPage = ({ movieId, onBack }) => {
   const [movie, setMovie] = useState(null);
@@ -60,86 +59,51 @@ const WatchPage = ({ movieId, onBack }) => {
   useEffect(() => {
     const loadMovie = async () => {
       try {
-        setLoading(true);
         console.log("Fetching movie details for ID:", movieId);
+        setLoading(true);
         const details = await fetchMovieDetails(movieId);
         console.log("Movie details received:", details);
         setMovie(details);
+        const sourcesResponse = await fetchStreamingSources(movieId);
+        console.log("Full API response:", sourcesResponse);
+
+        if (sourcesResponse) {
+          setStreamingSources(sourcesResponse);
+
+          if (sourcesResponse[currentSource]) {
+            setStreamingUrl(sourcesResponse[currentSource]);
+          } else {
+            console.log("No streaming URL found for source:", currentSource);
+            const firstAvailableSource = Object.keys(sourcesResponse).find(
+              (key) =>
+                sourcesResponse[key] &&
+                typeof sourcesResponse[key] === "string" &&
+                key !== "imdbId"
+            );
+            if (firstAvailableSource) {
+              setCurrentSource(firstAvailableSource);
+              setStreamingUrl(sourcesResponse[firstAvailableSource]);
+            }
+          }
+        }
       } catch (error) {
         console.error("Error loading movie:", error);
       } finally {
         setLoading(false);
+        setLoadingUrl(false);
       }
     };
 
     if (movieId) {
       loadMovie();
     }
-  }, [movieId]);
+  }, [movieId, currentSource]);
 
   useEffect(() => {
     if (user && favorites && movie) {
       setIsInWatchlist(favorites.some((fav) => fav.id === movie.id));
     }
   }, [user, favorites, movie]);
-
-  useEffect(() => {
-    const fetchServers = async () => {
-      if (!movie?.id) return;
-
-      try {
-        const response = await makeRequest(`/movies/${movie.id}/servers`);
-
-        if (response && response.data) {
-          const sources = {};
-          response.data.forEach((server) => {
-            if (server.status === "online") {
-              sources[server.id] = server.name;
-            }
-          });
-          setStreamingSources(sources);
-
-          if (!currentSource || !sources[currentSource]) {
-            const firstSource = Object.keys(sources)[0];
-            if (firstSource) {
-              setCurrentSource(firstSource);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching movie servers:", error);
-      }
-    };
-
-    fetchServers();
-  }, [movie, setCurrentSource]);
-
-  useEffect(() => {
-    const fetchStreamingUrl = async () => {
-      if (!movie?.id || !currentSource) return;
-
-      setLoadingUrl(true);
-      try {
-        const response = await makeRequest(
-          `/movies/${movie.id}/streaming-sources`
-        );
-        console.log("Movie streaming sources response:", response);
-
-        if (response && response.data && response.data[currentSource]) {
-          setStreamingUrl(response.data[currentSource]);
-        } else {
-          console.warn("No streaming URL found for source:", currentSource);
-          setStreamingUrl("");
-        }
-      } catch (error) {
-        console.error("Error fetching movie streaming URL:", error);
-      } finally {
-        setLoadingUrl(false);
-      }
-    };
-
-    fetchStreamingUrl();
-  }, [movie, currentSource]);
 
   const handleWatchlistToggle = async () => {
     if (!user) {

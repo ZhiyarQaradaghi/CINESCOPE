@@ -54,7 +54,6 @@ const VideoPlayer = ({ url, isLoading }) => {
     setError(true);
   };
 
-  // Show loading state if URL is being fetched
   if (isLoading) {
     return (
       <Box
