@@ -6,11 +6,9 @@ import {
   Typography,
   Box,
   Rating,
-  Button,
 } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
-const MovieCard = ({ movie, onClick, onWatchClick, isTV = false }) => {
+const MovieCard = ({ movie, onClick, isTV = false }) => {
   const posterPath = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : "https://via.placeholder.com/500x750?text=No+Poster";
@@ -74,25 +72,6 @@ const MovieCard = ({ movie, onClick, onWatchClick, isTV = false }) => {
             </Box>
           </Box>
         </CardContent>
-      </Box>
-      <Box sx={{ mt: "auto", p: 2, pt: 0 }}>
-        <Button
-          variant="contained"
-          fullWidth
-          startIcon={<PlayArrowIcon />}
-          onClick={(e) => {
-            e.stopPropagation();
-            onWatchClick(movie.id);
-          }}
-          sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            background: "linear-gradient(90deg, #646cff, #ff64c8)",
-            fontWeight: 500,
-          }}
-        >
-          {isTV ? "Watch Show" : "Watch Movie"}
-        </Button>
       </Box>
     </Card>
   );
