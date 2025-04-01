@@ -1,24 +1,29 @@
 const API_BASE_URL =
-  import.meta.env.VITE_SOCKET_SERVER || "http://localhost:5000/api";
+  import.meta.env.VITE_SOCKET_SERVER || "http://localhost:5000";
 
 export const makeRequest = async (endpoint, options = {}) => {
   try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
+    const apiPath = endpoint.startsWith("/api") ? endpoint : `/api${endpoint}`;
+    const url = `${API_BASE_URL}${apiPath}`;
+
+    console.log("Fetching:", url);
+
+    const defaultOptions = {
       headers: {
         "Content-Type": "application/json",
-        ...options.headers,
       },
-    });
+      credentials: "include",
+    };
+
+    const response = await fetch(url, { ...defaultOptions, ...options });
 
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("API request error:", error);
+    console.error(`API Request Error for ${endpoint}:`, error);
     throw error;
   }
 };
