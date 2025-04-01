@@ -8,7 +8,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true,
+  withCredentials: window.location.hostname !== "localhost" ? false : true,
 });
 
 api.interceptors.request.use((config) => {
