@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import {
   ThemeProvider,
   createTheme,
@@ -90,6 +95,7 @@ function App() {
                 }
               />
               <Route path="/test" element={<TestPage />} />
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Container>
           <Footer />
